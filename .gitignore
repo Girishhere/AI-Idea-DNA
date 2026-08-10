@@ -1,0 +1,32 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+.env*
+!.env.example
+
+# Next.js build output
+.next/
+out/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.sqlite3
+*.db
+
+# ML Assets & Large Files
+backend_ml_assets/
+backend/app/ml_assets/saved_dna_model/
+backend/app/ml_assets/*.index
+
+# Misc
+.DS_Store
+*.log
+coverage/
+.vscode/
+.idea/

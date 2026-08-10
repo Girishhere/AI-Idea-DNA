@@ -1,0 +1,67 @@
+[
+  {
+    "title":"Smart Attendance System using Face Recognition",
+    "domain":"Computer Vision",
+    "description":"A face recognition based attendance system that captures classroom video, identifies students using OpenCV, and updates database."
+  },
+  {
+    "title":"Pothole Detection using Deep CNN and Computer Vision",
+    "domain":"Computer Vision",
+    "description":"Detect road damage and potholes in real-time using modern CNN architectures deployed on street camera feeds."
+  },
+  {
+    "title":"E-commerce Fraud Detection with XGBoost and Neural Networks",
+    "domain":"Cybersecurity",
+    "description":"Detect fraudulent transactions in credit card data using deep neural networks and anomaly detection techniques."
+  },
+  {
+    "title":"Medical Image Segmentation for Brain Tumor Detection",
+    "domain":"Healthcare",
+    "description":"Segmentation of MRI brain images to detect tumor boundaries using U-Net architecture and PyTorch."
+  },
+  {
+    "title":"Student Performance Prediction using Multi-Layer Perceptron",
+    "domain":"EdTech",
+    "description":"Predicting student grades and identifying at-risk students using deep neural networks trained on historical academic data."
+  },
+  {
+    "title":"Resume Maker / Resume Builder Application",
+    "domain":"Web Development",
+    "description":"A basic web application to input user details and generate a PDF resume using standard templates."
+  },
+  {
+    "title":"To-Do List and Task Manager App",
+    "domain":"Web Development",
+    "description":"A simple task management application for users to create, update, and delete daily to-do items."
+  },
+  {
+    "title":"Weather Forecasting Web App",
+    "domain":"Web Development",
+    "description":"A web application that fetches real-time weather data from a public API and displays current conditions."
+  },
+  {
+    "title":"E-Commerce Website / Online Shopping Cart",
+    "domain":"E-Commerce",
+    "description":"A basic online store with a product catalog, shopping cart functionality, and simulated checkout."
+  },
+  {
+    "title":"Basic AI Chatbot using OpenAI API",
+    "domain":"Artificial Intelligence",
+    "description":"A conversational interface that simply forwards user prompts to an LLM API and displays the response."
+  },
+  {
+    "title":"Library Management System",
+    "domain":"Software Engineering",
+    "description":"A desktop or web application to manage book inventory, issue records, and member details."
+  },
+  {
+    "title":"Expense Tracker and Budget Manager",
+    "domain":"Finance",
+    "description":"An application for users to log their daily expenses, categorize spending, and view basic charts."
+  },
+  {
+    "title":"Portfolio Website Builder",
+    "domain":"Web Development",
+    "description":"A static site generator or builder that allows users to create a personal portfolio from predefined themes."
+  }
+]
