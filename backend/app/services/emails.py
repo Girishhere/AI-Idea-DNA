@@ -1,50 +1,50 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import urllib.request
+import json
 import os
 
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER", "")
-SMTP_PASS = os.getenv("SMTP_PASS", "")
+EMAILJS_SERVICE_ID = "service_aqqtip3"
+EMAILJS_USER_ID = "IFVDxR1oL_If1UC54"
+EMAILJS_ACCESS_TOKEN = "1CJeFliPV1jBWEx3jcXvV"
+EMAILJS_OTP_TEMPLATE = "template_ibmbisu"
+EMAILJS_WELCOME_TEMPLATE = "template_vhdmteo"
 
-def send_email(to_email: str, subject: str, body: str):
-    if not SMTP_USER or not SMTP_PASS:
-        print(f"Mock Email to {to_email} | Subject: {subject} | Body: {body}")
-        return
-
+def send_emailjs(template_id: str, template_params: dict):
+    url = "https://api.emailjs.com/api/v1.0/email/send"
+    payload = {
+        "service_id": EMAILJS_SERVICE_ID,
+        "template_id": template_id,
+        "user_id": EMAILJS_USER_ID,
+        "accessToken": EMAILJS_ACCESS_TOKEN,
+        "template_params": template_params
+    }
+    
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+    
     try:
-        msg = MIMEMultipart()
-        msg["From"] = SMTP_USER
-        msg["To"] = to_email
-        msg["Subject"] = subject
-
-        msg.attach(MIMEText(body, "html"))
-
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASS)
-        server.send_message(msg)
-        server.quit()
-        print(f"Email sent successfully to {to_email}")
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                print(f"EmailJS sent successfully: {template_id}")
+            else:
+                print(f"EmailJS failed: {response.read()}")
     except Exception as e:
-        print(f"Failed to send email to {to_email}: {e}")
+        print(f"Failed to send email via EmailJS: {e}")
 
 def send_otp_email(to_email: str, otp: str):
-    subject = "Verify your AI Idea DNA Account"
-    body = f"""
-    <h2>Welcome to AI Idea DNA!</h2>
-    <p>Your verification code is: <strong>{otp}</strong></p>
-    <p>Please enter this code on the signup page to verify your account.</p>
-    """
-    send_email(to_email, subject, body)
+    # Pass various param names that the user might have configured in their template
+    params = {
+        "to_email": to_email,
+        "otp": otp,
+        "message": f"Your verification code is: {otp}"
+    }
+    send_emailjs(EMAILJS_OTP_TEMPLATE, params)
 
 def send_reset_password_email(to_email: str, reset_link: str):
-    subject = "Reset your AI Idea DNA Password"
-    body = f"""
-    <h2>Password Reset Request</h2>
-    <p>You have requested to reset your password. Click the link below to set a new password:</p>
-    <a href="{reset_link}">{reset_link}</a>
-    <p>If you did not request this, please ignore this email.</p>
-    """
-    send_email(to_email, subject, body)
+    params = {
+        "to_email": to_email,
+        "reset_link": reset_link,
+        "message": f"Click the link to reset your password: {reset_link}"
+    }
+    # Using welcome template as fallback for reset link if no dedicated reset template was provided
+    send_emailjs(EMAILJS_WELCOME_TEMPLATE, params)
+
