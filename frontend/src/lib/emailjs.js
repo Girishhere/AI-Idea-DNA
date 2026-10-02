@@ -1,25 +1,39 @@
 /**
  * Send OTP email via EmailJS directly from the browser.
- * Using the REST API with accessToken (private key) bypasses all domain restrictions.
- * Safe to use here because EmailJS private keys only allow sending emails, nothing destructive.
+ * Credentials come from Vercel environment variables (NEXT_PUBLIC_ prefix = available in browser).
  */
 export const sendOTPEmail = async (toEmail, otp, subject = "Verification Code") => {
+  const serviceId  = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+  const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+  const publicKey  = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+  const privateKey = process.env.NEXT_PUBLIC_EMAILJS_PRIVATE_KEY;
+
+  if (!serviceId || !templateId || !publicKey) {
+    console.warn("[EmailJS] Missing env vars — check Vercel settings");
+    return;
+  }
+
   try {
+    const body = {
+      service_id:      serviceId,
+      template_id:     templateId,
+      user_id:         publicKey,
+      template_params: {
+        to_email: toEmail,
+        otp:      otp,
+        message:  `${subject}: ${otp}`
+      }
+    };
+
+    // Include private key only if set (bypasses domain restriction without whitelisting)
+    if (privateKey) body.accessToken = privateKey;
+
     const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-      method: "POST",
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        service_id: "service_aqqtip3",
-        template_id: "template_ibmbisu",
-        user_id: "IFVDxR1oL_If1UC54",
-        accessToken: "1CJeFliPV1jBWEx3jcXvV",
-        template_params: {
-          to_email: toEmail,
-          otp: otp,
-          message: `${subject}: ${otp}`
-        }
-      })
+      body:    JSON.stringify(body)
     });
+
     if (res.status === 200) {
       console.log("[EmailJS] ✅ Email sent to", toEmail);
     } else {
