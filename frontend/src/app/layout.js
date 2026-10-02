@@ -6,6 +6,7 @@
  */
 
 import "./globals.css";
+import ClientProviders from "../context/ClientProviders";
 
 /* ── SEO Metadata ────────────────────────────────────────────── */
 export const metadata = {
@@ -50,7 +51,9 @@ export default function RootLayout({ children }) {
         <div className="fixed inset-0 bg-grid pointer-events-none opacity-30 z-0" />
 
         {/* Main content */}
-        <main className="relative z-10">{children}</main>
+        <main className="relative z-10">
+          <ClientProviders>{children}</ClientProviders>
+        </main>
       </body>
     </html>
   );

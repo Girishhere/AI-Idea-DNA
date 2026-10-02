@@ -10,8 +10,10 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
+  const { user, logout } = useAuth();
   return (
     <motion.nav
       className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
@@ -78,12 +80,51 @@ export default function Navbar() {
 
         {/* ── Navigation Links ─────────────────────────────── */}
         <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="glow-button glow-button-outline text-sm py-2 px-5"
-          >
-            Dashboard
-          </Link>
+          {user ? (
+            <>
+              {user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="glow-button glow-button-outline text-sm py-2 px-5"
+                >
+                  Admin
+                </Link>
+              )}
+              <Link
+                href="/dashboard"
+                className="glow-button glow-button-outline text-sm py-2 px-5"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/profile"
+                className="glow-button glow-button-outline text-sm py-2 px-5"
+              >
+                Profile
+              </Link>
+              <button
+                onClick={logout}
+                className="text-xs text-white/50 hover:text-white transition-colors px-2"
+              >
+                LOGOUT
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm py-2 px-5 text-white/70 hover:text-white transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="glow-button glow-button-outline text-sm py-2 px-5"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </motion.nav>

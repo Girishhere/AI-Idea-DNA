@@ -45,13 +45,41 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(120), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
+    role = Column(String(20), default="user")  # 'user' or 'admin'
     created_at = Column(DateTime, default=_utcnow)
 
     # ── Relationships ────────────────────────────────────────
     ideas = relationship("ProjectIdea", back_populates="user", cascade="all, delete-orphan")
+    profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<User(username='{self.username}')>"
+        return f"<User(username='{self.username}', role='{self.role}')>"
+
+
+# ═══════════════════════════════════════════════════════════════
+# USER PROFILE MODEL
+# ═══════════════════════════════════════════════════════════════
+class UserProfile(Base):
+    """
+    Stores extended user details like name, institution, and tech stack.
+    """
+    __tablename__ = "user_profiles"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), unique=True, nullable=False)
+    
+    full_name = Column(String(100), nullable=True)
+    organization = Column(String(100), nullable=True)  # University or Company
+    bio = Column(Text, nullable=True)
+    interests = Column(String(500), nullable=True)     # Comma-separated tech interests
+    
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+    # ── Relationships ────────────────────────────────────────
+    user = relationship("User", back_populates="profile")
+
+    def __repr__(self):
+        return f"<UserProfile(full_name='{self.full_name}')>"
 
 
 # ═══════════════════════════════════════════════════════════════

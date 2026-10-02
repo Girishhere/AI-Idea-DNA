@@ -26,3 +26,8 @@ python-dotenv==1.0.1
 
 # CORS & utilities
 python-multipart==0.0.20
+
+# Auth & Monitoring
+passlib[bcrypt]
+pyjwt
+psutil

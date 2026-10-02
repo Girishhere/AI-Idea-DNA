@@ -21,10 +21,33 @@ async function apiFetch(endpoint, options = {}) {
   const response = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
-      ...options.headers,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
     },
     ...options,
   });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `API error: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Generic fetch wrapper for auth/protected routes.
+ */
+async function apiAuthFetch(endpoint, token, options = {}) {
+  const url = `${API_BASE}${endpoint}`;
+  
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  };
+
+  const response = await fetch(url, { ...options, headers });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
@@ -56,5 +79,54 @@ export async function evolveIdea(idea, mode) {
   return apiFetch("/evolve", {
     method: "POST",
     body: JSON.stringify({ idea, mode }),
+  });
+}
+
+// ── Auth Endpoints ───────────────────────────────────────────
+
+export async function login(username, password) {
+  return apiFetch("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  });
+}
+
+export async function signup(username, email, password) {
+  return apiFetch("/auth/signup", {
+    method: "POST",
+    body: JSON.stringify({ username, email, password }),
+  });
+}
+
+export async function getMe(token) {
+  return apiAuthFetch("/auth/me", token, {
+    method: "GET",
+  });
+}
+
+export async function updateProfile(token, profileData) {
+  return apiAuthFetch("/auth/profile", token, {
+    method: "PUT",
+    body: JSON.stringify(profileData),
+  });
+}
+
+// ── Admin Endpoints ──────────────────────────────────────────
+
+export async function getUsers(token) {
+  return apiAuthFetch("/admin/users", token, {
+    method: "GET",
+  });
+}
+
+export async function resetPassword(token, userId) {
+  return apiAuthFetch(`/admin/users/${userId}/reset-password`, token, {
+    method: "PUT",
+  });
+}
+
+export async function getSystemMetrics(token) {
+  return apiAuthFetch("/admin/system/metrics", token, {
+    method: "GET",
   });
 }

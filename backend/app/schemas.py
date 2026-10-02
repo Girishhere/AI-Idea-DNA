@@ -94,3 +94,52 @@ class EvolveResponse(BaseModel):
     original_idea: str
     mode: EvolutionMode
     evolved_versions: List[EvolvedConcept]
+
+
+# ═══════════════════════════════════════════════════════════════
+# AUTHENTICATION & USER SCHEMAS
+# ═══════════════════════════════════════════════════════════════
+class UserCreate(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: str
+    password: str = Field(..., min_length=6)
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: str
+    role: str
+
+
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    organization: Optional[str] = None
+    bio: Optional[str] = None
+    interests: Optional[str] = None
+
+
+class UserProfileResponse(BaseModel):
+    full_name: Optional[str]
+    organization: Optional[str]
+    bio: Optional[str]
+    interests: Optional[str]
+    
+    class Config:
+        from_attributes = True
+
+
+class UserResponse(BaseModel):
+    id: str
+    username: str
+    email: str
+    role: str
+    profile: Optional[UserProfileResponse] = None
+
+    class Config:
+        from_attributes = True

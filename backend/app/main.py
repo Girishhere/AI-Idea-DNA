@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import engine, Base
-from app.routers import analyze, evolve
+from app.routers import analyze, evolve, auth, admin
 from app.services.faiss_service import faiss_service
 
 
@@ -87,7 +87,8 @@ app.add_middleware(
 # ═══════════════════════════════════════════════════════════════
 app.include_router(analyze.router)
 app.include_router(evolve.router)
-
+app.include_router(auth.router)
+app.include_router(admin.router)
 
 # ═══════════════════════════════════════════════════════════════
 # HEALTH CHECK
