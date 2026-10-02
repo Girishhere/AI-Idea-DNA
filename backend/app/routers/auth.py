@@ -25,7 +25,16 @@ def generate_otp():
 def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter((User.username == user_data.username) | (User.email == user_data.email)).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Username or Email already registered")
+        if db_user.is_verified:
+            raise HTTPException(status_code=400, detail="Username or Email already registered")
+        else:
+            # User exists but is unverified, resend OTP
+            otp = generate_otp()
+            db_user.hashed_password = get_password_hash(user_data.password)
+            db_user.verification_otp = otp
+            db.commit()
+            send_otp_email(db_user.email, otp)
+            return {"message": "Verification code resent. Please verify your email with the OTP."}
         
     hashed_pw = get_password_hash(user_data.password)
     is_first = db.query(User).count() == 0
