@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar";
 import { useGoogleLogin } from "@react-oauth/google";
 import { googleAuth, signupUser, verifyOTP, resendOTP } from "../../lib/api";
+import { sendOTPEmail } from "../../lib/emailjs";
 
 export default function SignupPage() {
   const [username, setUsername] = useState("");
@@ -35,24 +36,7 @@ export default function SignupPage() {
     }, 1000);
   };
 
-  // Send OTP email directly from browser via EmailJS (no private key needed!)
-  const sendOTPEmail = async (toEmail, otp) => {
-    try {
-      const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          service_id: "service_aqqtip3",
-          template_id: "template_ibmbisu",
-          user_id: "IFVDxR1oL_If1UC54",
-          template_params: { to_email: toEmail, otp: otp, message: `Your verification code is: ${otp}` }
-        })
-      });
-      console.log("[EmailJS] status:", res.status);
-    } catch (e) {
-      console.warn("[EmailJS] send failed (non-critical):", e);
-    }
-  };
+  // sendOTPEmail is imported from ../../lib/emailjs
 
   const handleSignup = async (e) => {
     e.preventDefault();

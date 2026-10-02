@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { forgotPassword, resetPassword } from "../../lib/api";
+import { sendOTPEmail } from "../../lib/emailjs";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -14,22 +15,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
-  const sendOTPEmail = async (toEmail, otpCode) => {
-    try {
-      await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          service_id: "service_aqqtip3",
-          template_id: "template_ibmbisu",
-          user_id: "IFVDxR1oL_If1UC54",
-          template_params: { to_email: toEmail, otp: otpCode, message: `Your password reset code is: ${otpCode}` }
-        })
-      });
-    } catch (e) {
-      console.warn("[EmailJS] send failed:", e);
-    }
-  };
+  // sendOTPEmail is imported from ../../lib/emailjs
 
   const handleRequestOTP = async (e) => {
     e.preventDefault();

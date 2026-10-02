@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { loginUser as apiLogin, signupUser as apiSignup, fetchMe as getMe } from "../lib/api";
+import { loginUser as apiLogin, fetchMe as getMe } from "../lib/api";
 
 const AuthContext = createContext({});
 
@@ -37,10 +37,10 @@ export const AuthProvider = ({ children }) => {
     router.push("/dashboard");
   };
 
-  const signup = async (username, email, password) => {
-    const data = await apiSignup(username, email, password);
-    localStorage.setItem("token", data.access_token);
-    const userData = await getMe(data.access_token);
+  // setToken is called after OTP verification completes (signup is now a 2-step flow)
+  const setToken = async (token) => {
+    localStorage.setItem("token", token);
+    const userData = await getMe(token);
     setUser(userData);
     router.push("/dashboard");
   };
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   }, [user, loading, pathname, router]);
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading, setUser }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, setUser, setToken }}>
       {children}
     </AuthContext.Provider>
   );
