@@ -21,6 +21,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    Boolean,
 )
 from sqlalchemy.orm import relationship
 
