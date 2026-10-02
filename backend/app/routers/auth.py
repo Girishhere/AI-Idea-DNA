@@ -26,13 +26,16 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
         if db_user.is_verified:
             raise HTTPException(status_code=400, detail="Username or Email already registered")
         else:
-            # User exists but is unverified, resend OTP
+            # User exists but is unverified — generate fresh OTP and return it for frontend to send
             otp = generate_otp()
             db_user.hashed_password = get_password_hash(user_data.password)
             db_user.verification_otp = otp
             db.commit()
-            send_otp_email(db_user.email, otp)
-            return {"message": "Verification code resent. Please verify your email with the OTP."}
+            return {
+                "message": "Verification code resent. Please verify your email with the OTP.",
+                "otp": otp,
+                "email": db_user.email
+            }
         
     hashed_pw = get_password_hash(user_data.password)
     is_first = db.query(User).count() == 0
@@ -56,9 +59,12 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     db.add(profile)
     db.commit()
     
-    send_otp_email(new_user.email, otp)
-    
-    return {"message": "Signup successful. Please verify your email with the OTP."}
+    # Return OTP so frontend sends email via EmailJS (browser-side — no private key needed)
+    return {
+        "message": "Signup successful. Please verify your email with the OTP.",
+        "otp": otp,
+        "email": new_user.email
+    }
 
 @router.post("/verify-otp", response_model=Token)
 def verify_otp(data: VerifyOTPRequest, db: Session = Depends(get_db)):
@@ -77,7 +83,7 @@ def verify_otp(data: VerifyOTPRequest, db: Session = Depends(get_db)):
 
 @router.post("/resend-otp")
 def resend_otp(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    """Resend OTP to unverified user. Uses email field from ForgotPasswordRequest."""
+    """Resend OTP — returns OTP so frontend can send email via EmailJS."""
     user = db.query(User).filter(User.email == data.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="No account found with that email")
@@ -86,8 +92,11 @@ def resend_otp(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     otp = generate_otp()
     user.verification_otp = otp
     db.commit()
-    send_otp_email(user.email, otp)
-    return {"message": "A new verification code has been sent to your email."}
+    return {
+        "message": "A new verification code has been sent to your email.",
+        "otp": otp,
+        "email": user.email
+    }
 
 @router.post("/google", response_model=Token)
 def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
@@ -180,11 +189,10 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
         user.reset_token = otp
         user.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
         db.commit()
+        # Return OTP so frontend sends email via EmailJS (browser-side, no private key needed)
+        return {"message": "Reset code generated.", "otp": otp, "email": user.email}
         
-        # We reuse the OTP email template instead of a link!
-        send_otp_email(user.email, otp)
-        
-    return {"message": "If an account with that email exists, a password reset code has been sent."}
+    return {"message": "If an account with that email exists, a password reset code has been sent.", "otp": None, "email": None}
 
 @router.post("/reset-password")
 def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):

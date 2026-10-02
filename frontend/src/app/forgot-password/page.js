@@ -14,12 +14,33 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
+  const sendOTPEmail = async (toEmail, otpCode) => {
+    try {
+      await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_id: "service_aqqtip3",
+          template_id: "template_ibmbisu",
+          user_id: "IFVDxR1oL_If1UC54",
+          template_params: { to_email: toEmail, otp: otpCode, message: `Your password reset code is: ${otpCode}` }
+        })
+      });
+    } catch (e) {
+      console.warn("[EmailJS] send failed:", e);
+    }
+  };
+
   const handleRequestOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await forgotPassword(email);
-      setStatus({ type: "success", message: res.message });
+      // Send OTP from browser via EmailJS
+      if (res.otp && res.email) {
+        await sendOTPEmail(res.email, res.otp);
+      }
+      setStatus({ type: "success", message: "A 6-digit reset code has been sent to your email!" });
       setStep(2);
     } catch (err) {
       setStatus({ type: "error", message: err.message });

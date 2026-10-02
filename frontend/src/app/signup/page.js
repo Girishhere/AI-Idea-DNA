@@ -35,13 +35,36 @@ export default function SignupPage() {
     }, 1000);
   };
 
+  // Send OTP email directly from browser via EmailJS (no private key needed!)
+  const sendOTPEmail = async (toEmail, otp) => {
+    try {
+      const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_id: "service_aqqtip3",
+          template_id: "template_ibmbisu",
+          user_id: "IFVDxR1oL_If1UC54",
+          template_params: { to_email: toEmail, otp: otp, message: `Your verification code is: ${otp}` }
+        })
+      });
+      console.log("[EmailJS] status:", res.status);
+    } catch (e) {
+      console.warn("[EmailJS] send failed (non-critical):", e);
+    }
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
     setLoading(true);
     try {
-      await signupUser(username, email, password);
+      const data = await signupUser(username, email, password);
+      // Send OTP from browser via EmailJS
+      if (data.otp && data.email) {
+        await sendOTPEmail(data.email, data.otp);
+      }
       startCooldown(60);
       setStep(2);
     } catch (err) {
@@ -77,7 +100,11 @@ export default function SignupPage() {
     setSuccess("");
     setLoading(true);
     try {
-      await resendOTP(email);
+      const data = await resendOTP(email);
+      // Send OTP from browser via EmailJS
+      if (data.otp && data.email) {
+        await sendOTPEmail(data.email, data.otp);
+      }
       setSuccess("A new code has been sent to your email!");
       startCooldown(60);
     } catch (err) {
