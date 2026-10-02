@@ -39,6 +39,19 @@ export const verifyOTP = async (email, otp) => {
   return response.json();
 };
 
+export const resendOTP = async (email) => {
+  const response = await fetch("/api/auth/resend-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Resend failed");
+  }
+  return response.json();
+};
+
 export const googleAuth = async (token) => {
   const response = await fetch("/api/auth/google", {
     method: "POST",

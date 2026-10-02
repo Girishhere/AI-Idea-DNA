@@ -1,31 +1,48 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar";
 import { useGoogleLogin } from "@react-oauth/google";
-import { googleAuth, signupUser, verifyOTP } from "../../lib/api";
+import { googleAuth, signupUser, verifyOTP, resendOTP } from "../../lib/api";
 
 export default function SignupPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [step, setStep] = useState(1);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const { setToken } = useAuth();
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
     try {
       await signupUser(username, email, password);
+      setResendCooldown(60);
       setStep(2);
     } catch (err) {
-      setError(err.message || "Failed to signup");
+      const msg = err.message || "";
+      // If email already registered but not verified, jump to verify step
+      if (msg.toLowerCase().includes("resent") || msg.toLowerCase().includes("verify")) {
+        setResendCooldown(60);
+        setStep(2);
+      } else {
+        setError(msg || "Failed to signup");
+      }
     } finally {
       setLoading(false);
     }
@@ -40,6 +57,21 @@ export default function SignupPage() {
       setToken(data.access_token);
     } catch (err) {
       setError(err.message || "OTP Verification failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    try {
+      await resendOTP(email);
+      setSuccess("A new code has been sent to your email!");
+      setResendCooldown(60);
+    } catch (err) {
+      setError(err.message || "Resend failed");
     } finally {
       setLoading(false);
     }
@@ -73,6 +105,11 @@ export default function SignupPage() {
           {error && (
             <div className="mb-4 p-3 border border-red-500/30 bg-red-500/10 text-red-200 text-sm rounded">
               {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-3 border border-green-500/30 bg-green-500/10 text-green-200 text-sm rounded">
+              {success}
             </div>
           )}
 
@@ -143,7 +180,7 @@ export default function SignupPage() {
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <p className="text-sm text-neutral-400 text-center mb-4">
-                An authorization code has been dispatched to {email}.
+                An authorization code has been dispatched to <span className="text-white font-mono">{email}</span>.
               </p>
               <div>
                 <label className="block text-xs font-mono text-neutral-400 mb-1 text-center">Auth Code</label>
@@ -164,6 +201,27 @@ export default function SignupPage() {
               >
                 {loading ? "Verifying..." : "Verify Code"}
               </button>
+              <div className="text-center mt-3">
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={loading || resendCooldown > 0}
+                  className="text-sm text-neutral-400 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {resendCooldown > 0
+                    ? `Resend code in ${resendCooldown}s`
+                    : "Didn't receive it? Resend code"}
+                </button>
+              </div>
+              <div className="text-center mt-2">
+                <button
+                  type="button"
+                  onClick={() => { setStep(1); setOtp(""); setError(""); setSuccess(""); }}
+                  className="text-xs text-neutral-500 hover:text-white transition-colors"
+                >
+                  ← Go back
+                </button>
+              </div>
             </form>
           )}
           

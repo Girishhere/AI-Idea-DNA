@@ -75,21 +75,40 @@ def verify_otp(data: VerifyOTPRequest, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": user.id, "role": user.role})
     return {"access_token": access_token, "token_type": "bearer", "user_id": user.id, "role": user.role}
 
+@router.post("/resend-otp")
+def resend_otp(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Resend OTP to unverified user. Uses email field from ForgotPasswordRequest."""
+    user = db.query(User).filter(User.email == data.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="No account found with that email")
+    if user.is_verified:
+        raise HTTPException(status_code=400, detail="Account already verified. Please login.")
+    otp = generate_otp()
+    user.verification_otp = otp
+    db.commit()
+    send_otp_email(user.email, otp)
+    return {"message": "A new verification code has been sent to your email."}
+
 @router.post("/google", response_model=Token)
 def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
     try:
-        import urllib.request
+        import requests as req_lib
         import json
-        req = urllib.request.Request(f"https://www.googleapis.com/oauth2/v3/userinfo?access_token={data.token}")
-        with urllib.request.urlopen(req) as response:
-            if response.status != 200:
-                raise ValueError("Invalid token")
-            idinfo = json.loads(response.read().decode())
-        email = idinfo['email']
+        # Use Bearer header method (more reliable than query param)
+        headers = {"Authorization": f"Bearer {data.token}"}
+        resp = req_lib.get("https://www.googleapis.com/oauth2/v3/userinfo", headers=headers, timeout=10)
+        print(f"[Google Auth] Status: {resp.status_code}, Body: {resp.text[:200]}")
+        if resp.status_code != 200:
+            raise ValueError(f"Google userinfo returned {resp.status_code}: {resp.text}")
+        idinfo = resp.json()
+        email = idinfo.get('email')
+        if not email:
+            raise ValueError("No email in Google token")
         name = idinfo.get('name', '')
-        google_id = idinfo['sub']
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid Google token")
+        google_id = idinfo.get('sub', '')
+    except Exception as e:
+        print(f"[Google Auth] FAILED: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid Google token: {str(e)}")
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
