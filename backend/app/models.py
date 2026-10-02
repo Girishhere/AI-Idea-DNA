@@ -44,8 +44,17 @@ class User(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(120), unique=True, nullable=False, index=True)
-    hashed_password = Column(String(255), nullable=False)
+    hashed_password = Column(String(255), nullable=True) # Nullable for OAuth users
     role = Column(String(20), default="user")  # 'user' or 'admin'
+    
+    # Auth V2 Additions
+    is_verified = Column(Boolean, default=False)
+    auth_provider = Column(String(20), default="local") # "local" or "google"
+    google_id = Column(String(255), nullable=True, unique=True)
+    verification_otp = Column(String(10), nullable=True)
+    reset_token = Column(String(255), nullable=True)
+    reset_token_expiry = Column(DateTime, nullable=True)
+    
     created_at = Column(DateTime, default=_utcnow)
 
     # ── Relationships ────────────────────────────────────────

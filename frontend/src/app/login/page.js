@@ -4,12 +4,14 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleAuth } from "../../lib/api";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const { login, setToken } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +20,15 @@ export default function LoginPage() {
       await login(username, password);
     } catch (err) {
       setError(err.message || "Failed to login");
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const data = await googleAuth(credentialResponse.credential);
+      setToken(data.access_token);
+    } catch (err) {
+      setError(err.message || "Google login failed");
     }
   };
 
@@ -52,7 +63,10 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-mono text-neutral-400 mb-1">Password</label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs font-mono text-neutral-400">Password</label>
+                <a href="/forgot-password" className="text-xs text-neutral-500 hover:text-white transition-colors">Forgot?</a>
+              </div>
               <input
                 type="password"
                 value={password}
@@ -68,6 +82,21 @@ export default function LoginPage() {
               Authenticate
             </button>
           </form>
+
+          <div className="my-6 flex items-center justify-center">
+            <div className="border-t border-white/10 w-full"></div>
+            <span className="px-4 text-xs font-mono text-neutral-500 uppercase">OR</span>
+            <div className="border-t border-white/10 w-full"></div>
+          </div>
+
+          <div className="flex justify-center w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Google login failed")}
+              theme="filled_black"
+              text="continue_with"
+            />
+          </div>
           
           <div className="mt-6 text-center text-sm text-neutral-500">
             Don't have an account? <a href="/signup" className="text-white hover:underline">Request Access</a>

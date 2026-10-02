@@ -139,7 +139,29 @@ class UserResponse(BaseModel):
     username: str
     email: str
     role: str
+    is_verified: bool
+    auth_provider: str
     profile: Optional[UserProfileResponse] = None
 
     class Config:
         from_attributes = True
+
+# ── New Auth Schemas ────────────────────────────────────────
+
+class VerifyOTPRequest(BaseModel):
+    email: str
+    otp: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=6)
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str = Field(..., min_length=6)
+
+class GoogleAuthRequest(BaseModel):
+    token: str

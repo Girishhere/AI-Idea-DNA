@@ -1,132 +1,168 @@
-/**
- * ============================================================
- * AI Idea DNA — API Client
- * ============================================================
- * Centralized API helper functions for communicating with
- * the FastAPI backend. Uses Next.js proxy rewrites so all
- * requests go through the same origin.
- */
+// Authentication API
 
-const API_BASE = "/api";
-
-/**
- * Generic fetch wrapper with error handling.
- * @param {string} endpoint - API endpoint path (e.g., "/analyze")
- * @param {object} options - Fetch options
- * @returns {Promise<object>} Parsed JSON response
- */
-async function apiFetch(endpoint, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
-
-  const response = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || `API error: ${response.status}`);
-  }
-
-  return response.json();
-}
-
-/**
- * Generic fetch wrapper for auth/protected routes.
- */
-async function apiAuthFetch(endpoint, token, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
-  
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
-  };
-
-  const response = await fetch(url, { ...options, headers });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || `API error: ${response.status}`);
-  }
-
-  return response.json();
-}
-
-/**
- * Analyze a project idea — extracts DNA, computes novelty score.
- * @param {string} idea - The raw project idea text
- * @returns {Promise<{idea_dna, novelty_score, similar_projects, tags, summary}>}
- */
-export async function analyzeIdea(idea) {
-  return apiFetch("/analyze", {
+export const loginUser = async (username, password) => {
+  const response = await fetch("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ idea }),
-  });
-}
-
-/**
- * Evolve a project idea using a mutation strategy.
- * @param {string} idea - The original project idea text
- * @param {string} mode - Evolution mode: "technical" | "social_impact" | "product"
- * @returns {Promise<{original_idea, mode, evolved_versions}>}
- */
-export async function evolveIdea(idea, mode) {
-  return apiFetch("/evolve", {
-    method: "POST",
-    body: JSON.stringify({ idea, mode }),
-  });
-}
-
-// ── Auth Endpoints ───────────────────────────────────────────
-
-export async function login(username, password) {
-  return apiFetch("/auth/login", {
-    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
   });
-}
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Login failed");
+  }
+  return response.json();
+};
 
-export async function signup(username, email, password) {
-  return apiFetch("/auth/signup", {
+export const signupUser = async (username, email, password) => {
+  const response = await fetch("/api/auth/signup", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, email, password }),
   });
-}
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Signup failed");
+  }
+  return response.json();
+};
 
-export async function getMe(token) {
-  return apiAuthFetch("/auth/me", token, {
-    method: "GET",
+export const verifyOTP = async (email, otp) => {
+  const response = await fetch("/api/auth/verify-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp }),
   });
-}
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Verification failed");
+  }
+  return response.json();
+};
 
-export async function updateProfile(token, profileData) {
-  return apiAuthFetch("/auth/profile", token, {
+export const googleAuth = async (token) => {
+  const response = await fetch("/api/auth/google", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Google login failed");
+  }
+  return response.json();
+};
+
+export const forgotPassword = async (email) => {
+  const response = await fetch("/api/auth/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Request failed");
+  }
+  return response.json();
+};
+
+export const resetPassword = async (token, new_password) => {
+  const response = await fetch("/api/auth/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, new_password }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Reset failed");
+  }
+  return response.json();
+};
+
+export const changePassword = async (old_password, new_password, token) => {
+  const response = await fetch("/api/auth/change-password", {
     method: "PUT",
-    body: JSON.stringify(profileData),
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ old_password, new_password }),
   });
-}
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Change password failed");
+  }
+  return response.json();
+};
 
-// ── Admin Endpoints ──────────────────────────────────────────
-
-export async function getUsers(token) {
-  return apiAuthFetch("/admin/users", token, {
+export const fetchMe = async (token) => {
+  const response = await fetch("/api/auth/me", {
     method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
   });
-}
+  if (!response.ok) {
+    throw new Error("Failed to fetch user");
+  }
+  return response.json();
+};
 
-export async function resetPassword(token, userId) {
-  return apiAuthFetch(`/admin/users/${userId}/reset-password`, token, {
+export const updateProfile = async (profileData, token) => {
+  const response = await fetch("/api/auth/profile", {
     method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify(profileData)
   });
-}
+  if (!response.ok) {
+    throw new Error("Failed to update profile");
+  }
+  return response.json();
+};
 
-export async function getSystemMetrics(token) {
-  return apiAuthFetch("/admin/system/metrics", token, {
-    method: "GET",
+// Admin API
+export const fetchSystemMetrics = async (token) => {
+  const response = await fetch("/api/admin/metrics", {
+    headers: { "Authorization": `Bearer ${token}` }
   });
-}
+  if (!response.ok) throw new Error("Failed to fetch metrics");
+  return response.json();
+};
+
+export const fetchUsers = async (token) => {
+  const response = await fetch("/api/admin/users", {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  if (!response.ok) throw new Error("Failed to fetch users");
+  return response.json();
+};
+
+export const adminResetUserPassword = async (userId, token) => {
+  const response = await fetch(`/api/admin/users/${userId}/reset-password`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  if (!response.ok) throw new Error("Failed to reset user password");
+  return response.json();
+};
+
+// Project API
+export const submitIdea = async (idea) => {
+  const response = await fetch("/api/score", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idea }),
+  });
+  return response.json();
+};
+
+export const evolveIdea = async (idea, temperature, focus) => {
+  const response = await fetch("/api/evolve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idea, temperature, focus }),
+  });
+  return response.json();
+};
