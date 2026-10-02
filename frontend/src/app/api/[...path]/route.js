@@ -1,4 +1,5 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const rawBackendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const BACKEND_URL = rawBackendUrl.replace(/\/$/, "");
 
 async function handler(request, { params }) {
   const path = (await params).path.join("/");

@@ -71,11 +71,17 @@ def verify_otp(data: VerifyOTPRequest, db: Session = Depends(get_db)):
 @router.post("/google", response_model=Token)
 def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
     try:
-        idinfo = id_token.verify_oauth2_token(data.token, requests.Request(), GOOGLE_CLIENT_ID)
+        import urllib.request
+        import json
+        req = urllib.request.Request(f"https://www.googleapis.com/oauth2/v3/userinfo?access_token={data.token}")
+        with urllib.request.urlopen(req) as response:
+            if response.status != 200:
+                raise ValueError("Invalid token")
+            idinfo = json.loads(response.read().decode())
         email = idinfo['email']
         name = idinfo.get('name', '')
         google_id = idinfo['sub']
-    except ValueError:
+    except Exception:
         raise HTTPException(status_code=400, detail="Invalid Google token")
 
     user = db.query(User).filter(User.email == email).first()
