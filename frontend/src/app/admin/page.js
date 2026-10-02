@@ -4,13 +4,16 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar";
-import { fetchUsers as getUsers, fetchSystemMetrics as getSystemMetrics, adminResetUserPassword as resetPassword } from "../../lib/api";
+import { fetchUsers as getUsers, fetchSystemMetrics as getSystemMetrics, adminResetUserPassword as resetPassword, adminDeleteUser as deleteUser, adminAddUser as addUser } from "../../lib/api";
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
   const [users, setUsers] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [message, setMessage] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
     if (user && user.role === "admin") {
@@ -49,6 +52,33 @@ export default function AdminDashboard() {
       setTimeout(() => setMessage(""), 10000);
     } catch (err) {
       setMessage("Failed to reset password");
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    const token = localStorage.getItem("token");
+    try {
+      await deleteUser(userId, token);
+      setMessage("User deleted successfully");
+      fetchAdminData();
+    } catch (err) {
+      setMessage(err.message || "Failed to delete user");
+    }
+  };
+
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    try {
+      await addUser({ username: newUsername, email: newEmail, password: newPassword }, token);
+      setMessage("User added successfully");
+      setNewUsername("");
+      setNewEmail("");
+      setNewPassword("");
+      fetchAdminData();
+    } catch (err) {
+      setMessage(err.message || "Failed to add user");
     }
   };
 
@@ -108,15 +138,55 @@ export default function AdminDashboard() {
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={() => handleResetPassword(u.id)}
-                        className="text-xs text-white/70 hover:text-white hover:underline transition-colors"
+                        className="text-xs text-white/70 hover:text-white hover:underline transition-colors mr-3"
                       >
                         [ Reset Password ]
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteUser(u.id)}
+                        className="text-xs text-red-500/70 hover:text-red-500 hover:underline transition-colors"
+                      >
+                        [ Remove ]
                       </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          </div>
+          
+          <div className="mt-8 border-t border-white/10 pt-8">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Add New Entity</h3>
+            <form onSubmit={handleAddUser} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <input
+                type="text"
+                placeholder="Username"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                className="glass-input p-3 text-sm"
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="glass-input p-3 text-sm"
+                required
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="glass-input p-3 text-sm"
+                required
+              />
+              <button type="submit" className="glow-button glow-button-solid text-sm">
+                Register Entity
+              </button>
+            </form>
           </div>
         </div>
       </div>

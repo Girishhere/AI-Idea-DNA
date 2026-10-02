@@ -141,12 +141,41 @@ export const fetchUsers = async (token) => {
 
 export const adminResetUserPassword = async (userId, token) => {
   const response = await fetch(`/api/admin/users/${userId}/reset-password`, {
-    method: "POST",
+    method: "PUT",
     headers: { "Authorization": `Bearer ${token}` }
   });
   if (!response.ok) throw new Error("Failed to reset user password");
   return response.json();
 };
+
+export const adminDeleteUser = async (userId, token) => {
+  const response = await fetch(`/api/admin/users/${userId}`, {
+    method: "DELETE",
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.detail || "Failed to delete user");
+  }
+  return response.json();
+};
+
+export const adminAddUser = async (userData, token) => {
+  const response = await fetch("/api/admin/users", {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}` 
+    },
+    body: JSON.stringify(userData)
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.detail || "Failed to add user");
+  }
+  return response.json();
+};
+
 
 // Project API
 export const submitIdea = async (idea) => {

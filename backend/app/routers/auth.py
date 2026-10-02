@@ -153,15 +153,15 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
 def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
     if user:
-        token = str(uuid.uuid4())
-        user.reset_token = token
+        otp = generate_otp()
+        user.reset_token = otp
         user.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
         db.commit()
         
-        reset_link = f"{FRONTEND_URL}/reset-password?token={token}"
-        send_reset_password_email(user.email, reset_link)
+        # We reuse the OTP email template instead of a link!
+        send_otp_email(user.email, otp)
         
-    return {"message": "If an account with that email exists, a password reset link has been sent."}
+    return {"message": "If an account with that email exists, a password reset code has been sent."}
 
 @router.post("/reset-password")
 def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):

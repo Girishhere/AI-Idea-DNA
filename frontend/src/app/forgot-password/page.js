@@ -1,20 +1,42 @@
 "use client";
 
 import { useState } from "react";
-import { forgotPassword } from "../../lib/api";
+import { forgotPassword, resetPassword } from "../../lib/api";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
 
-  const handleSubmit = async (e) => {
+  const handleRequestOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await forgotPassword(email);
       setStatus({ type: "success", message: res.message });
+      setStep(2);
+    } catch (err) {
+      setStatus({ type: "error", message: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await resetPassword(otp, newPassword);
+      setStatus({ type: "success", message: "Password updated! Redirecting to login..." });
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
     } catch (err) {
       setStatus({ type: "error", message: err.message });
     } finally {
@@ -39,27 +61,65 @@ export default function ForgotPasswordPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-xs font-mono text-neutral-400 mb-2 uppercase">Account Email</label>
-            <input 
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-black border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neutral-500 transition-colors"
-              placeholder="operator@system.com"
-              required
-            />
-          </div>
+        {step === 1 ? (
+          <form onSubmit={handleRequestOTP} className="space-y-6">
+            <div>
+              <label className="block text-xs font-mono text-neutral-400 mb-2 uppercase">Account Email</label>
+              <input 
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-black border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neutral-500 transition-colors"
+                placeholder="operator@system.com"
+                required
+              />
+            </div>
 
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full bg-white text-black font-bold uppercase tracking-widest py-4 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
-          >
-            {loading ? "Transmitting..." : "Send Reset Link"}
-          </button>
-        </form>
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-white text-black font-bold uppercase tracking-widest py-4 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+            >
+              {loading ? "Transmitting..." : "Send Reset Code"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleResetPassword} className="space-y-6">
+            <p className="text-sm text-neutral-400 text-center mb-4">
+              Enter the 6-digit authorization code sent to {email}.
+            </p>
+            <div>
+              <label className="block text-xs font-mono text-neutral-400 mb-2 uppercase text-center">Auth Code</label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="w-full bg-black border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neutral-500 transition-colors text-center tracking-[0.5em] text-lg"
+                placeholder="000000"
+                maxLength={6}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-mono text-neutral-400 mb-2 uppercase">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full bg-black border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neutral-500 transition-colors"
+                required
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-white text-black font-bold uppercase tracking-widest py-4 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+            >
+              {loading ? "Verifying..." : "Confirm New Password"}
+            </button>
+          </form>
+        )}
       </motion.div>
     </div>
   );

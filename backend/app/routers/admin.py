@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models import User
 from app.schemas import UserResponse
 from app.services.auth_service import get_current_admin, get_password_hash
+from app.schemas import UserCreate
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -29,6 +30,39 @@ def reset_user_password(user_id: str, db: Session = Depends(get_db), current_adm
     
     return {"message": f"Password for {user.username} reset successfully", "new_password": default_password}
 
+
+@router.delete("/users/{user_id}")
+def delete_user(user_id: str, db: Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
+    """Delete a user from the database (Admin only)"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.id == current_admin.id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+        
+    db.delete(user)
+    db.commit()
+    return {"message": "User deleted successfully"}
+
+@router.post("/users")
+def add_user(user_data: UserCreate, db: Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
+    """Add a new user directly to the database (Admin only)"""
+    db_user = db.query(User).filter((User.username == user_data.username) | (User.email == user_data.email)).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username or Email already registered")
+        
+    new_user = User(
+        username=user_data.username,
+        email=user_data.email,
+        hashed_password=get_password_hash(user_data.password),
+        role="user",
+        is_verified=True  # Admin created users are auto-verified
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"message": "User added successfully", "user": new_user.username}
 
 @router.get("/system/metrics")
 def get_system_metrics(current_admin: User = Depends(get_current_admin)):
