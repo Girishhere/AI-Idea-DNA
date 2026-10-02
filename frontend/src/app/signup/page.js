@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar";
@@ -17,13 +17,23 @@ export default function SignupPage() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const cooldownRef = useRef(null);
   const { setToken } = useAuth();
 
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const timer = setInterval(() => setResendCooldown(c => c - 1), 1000);
-    return () => clearInterval(timer);
-  }, [resendCooldown]);
+  const startCooldown = (seconds) => {
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    setResendCooldown(seconds);
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -32,13 +42,13 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signupUser(username, email, password);
-      setResendCooldown(60);
+      startCooldown(60);
       setStep(2);
     } catch (err) {
       const msg = err.message || "";
       // If email already registered but not verified, jump to verify step
       if (msg.toLowerCase().includes("resent") || msg.toLowerCase().includes("verify")) {
-        setResendCooldown(60);
+        startCooldown(60);
         setStep(2);
       } else {
         setError(msg || "Failed to signup");
@@ -69,7 +79,7 @@ export default function SignupPage() {
     try {
       await resendOTP(email);
       setSuccess("A new code has been sent to your email!");
-      setResendCooldown(60);
+      startCooldown(60);
     } catch (err) {
       setError(err.message || "Resend failed");
     } finally {
