@@ -19,7 +19,11 @@ def send_emailjs(template_id: str, template_params: dict):
     }
     
     data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+    headers = {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+    req = urllib.request.Request(url, data=data, headers=headers)
     
     try:
         with urllib.request.urlopen(req) as response:
