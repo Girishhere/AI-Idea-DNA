@@ -92,20 +92,26 @@ def resend_otp(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 @router.post("/google", response_model=Token)
 def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
     try:
-        import requests as req_lib
+        import urllib.request
+        import urllib.error
         import json
-        # Use Bearer header method (more reliable than query param)
-        headers = {"Authorization": f"Bearer {data.token}"}
-        resp = req_lib.get("https://www.googleapis.com/oauth2/v3/userinfo", headers=headers, timeout=10)
-        print(f"[Google Auth] Status: {resp.status_code}, Body: {resp.text[:200]}")
-        if resp.status_code != 200:
-            raise ValueError(f"Google userinfo returned {resp.status_code}: {resp.text}")
-        idinfo = resp.json()
+        # Use Bearer header — more reliable than query param, no extra packages needed
+        req = urllib.request.Request(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {data.token}"}
+        )
+        with urllib.request.urlopen(req, timeout=10) as response:
+            idinfo = json.loads(response.read().decode())
+        print(f"[Google Auth] Success for: {idinfo.get('email')}")
         email = idinfo.get('email')
         if not email:
-            raise ValueError("No email in Google token")
+            raise ValueError("No email returned from Google")
         name = idinfo.get('name', '')
         google_id = idinfo.get('sub', '')
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        print(f"[Google Auth] HTTPError {e.code}: {body}")
+        raise HTTPException(status_code=400, detail=f"Invalid Google token: {e.code} {body}")
     except Exception as e:
         print(f"[Google Auth] FAILED: {e}")
         raise HTTPException(status_code=400, detail=f"Invalid Google token: {str(e)}")
