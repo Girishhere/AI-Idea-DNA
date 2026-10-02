@@ -20,7 +20,7 @@ import GlassCard from "@/components/GlassCard";
 import NoveltyGauge from "@/components/NoveltyGauge";
 import IdeaDNATags from "@/components/IdeaDNATags";
 import EvolutionView from "@/components/EvolutionView";
-import { analyzeIdea, evolveIdea } from "@/lib/api";
+import { submitIdea as analyzeIdea, evolveIdea } from "@/lib/api";
 
 // Dynamic 3D background (avoid SSR)
 const ThreeDNA = dynamic(() => import("@/components/ThreeDNA"), {

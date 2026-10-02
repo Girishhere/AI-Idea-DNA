@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { login as apiLogin, signup as apiSignup, getMe } from "../lib/api";
+import { loginUser as apiLogin, signupUser as apiSignup, fetchMe as getMe } from "../lib/api";
 
 const AuthContext = createContext({});
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar";
-import { getUsers, getSystemMetrics, resetPassword } from "../../lib/api";
+import { fetchUsers as getUsers, fetchSystemMetrics as getSystemMetrics, adminResetUserPassword as resetPassword } from "../../lib/api";
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
