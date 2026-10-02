@@ -154,7 +154,6 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
-          </div>
           
           <div className="mt-8 border-t border-white/10 pt-8">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Add New Entity</h3>
