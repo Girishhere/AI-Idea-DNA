@@ -200,11 +200,15 @@ export const submitIdea = async (idea) => {
   return response.json();
 };
 
-export const evolveIdea = async (idea, temperature, focus) => {
+export const evolveIdea = async (idea, mode) => {
   const response = await fetch("/api/evolve", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idea, temperature, focus }),
+    body: JSON.stringify({ idea, mode }),
   });
+  if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to evolve idea");
+  }
   return response.json();
 };
