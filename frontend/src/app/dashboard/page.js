@@ -1,16 +1,5 @@
 "use client";
 
-/**
- * ============================================================
- * AI Idea DNA — Dashboard Page (Monochrome Redesign)
- * ============================================================
- * Premium monochrome dashboard with:
- * • Analysis pipeline visualization
- * • Grid-based result layout
- * • Scroll-driven zoom animations
- * • Monochrome glass card components
- */
-
 import React, { useState, Suspense } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import dynamic from "next/dynamic";

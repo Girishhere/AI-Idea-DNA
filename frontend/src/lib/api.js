@@ -192,7 +192,7 @@ export const adminAddUser = async (userData, token) => {
 
 // Project API
 export const submitIdea = async (idea) => {
-  const response = await fetch("/api/score", {
+  const response = await fetch("/api/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idea }),
